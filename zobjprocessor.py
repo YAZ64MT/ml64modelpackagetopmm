@@ -1,0 +1,252 @@
+import sys
+from os import makedirs, walk, remove
+from pathlib import Path
+from typing import Any
+from ml64pypak.pakformat import Pak
+from shutil import rmtree
+import json
+import tempfile
+import zipfile
+import argparse
+
+def copy_bytes(dest: bytearray, src: bytes, dest_index: int, count: int | None = None):
+    if count is None:
+        count = len(src)
+
+    for i in range(count):
+        dest[dest_index + i] = src[i]
+
+
+def find_file_in_dir(to_find: str, dir: Path) -> Path | None:
+    for root, dirnames, filenames in walk(dir):
+        if to_find in filenames:
+            return Path(root, to_find)
+
+    return None
+
+
+def handle_model(
+    filename: str, display_name: str, out_dir: Path, root: Path, author=""
+):
+    try:
+        zobj_path = Path(root, filename)
+
+        if zobj_path.is_file():
+            zobj = bytearray(zobj_path.read_bytes())
+
+            if (
+                zobj[0x5000 : 0x5000 + len(b"MODLOADER64")] == b"MODLOADER64"
+                and zobj.find(b"PLAYERMODELINFO") < 0
+                and len(zobj) > 0x5800
+            ):
+                header_location = 0x5500
+                internal_name_field_size = 64
+                display_name_field_size = 32
+                author_name_field_size = 64
+
+                internal_name_location = header_location + 0x10
+                display_name_location = (
+                    internal_name_location + internal_name_field_size
+                )
+                author_name_location = display_name_location + display_name_field_size
+
+                relative_zobj_path = zobj_path.relative_to(root.parent)
+                internal_name = str(relative_zobj_path)
+                if internal_name.endswith(".zobj"):
+                    internal_name = internal_name[:-5]
+
+                if len(internal_name) > author_name_field_size - 1:
+                    internal_name = internal_name[: author_name_field_size - 1]
+
+                copy_bytes(zobj, b"PLAYERMODELINFO", header_location)
+                zobj[header_location + len(b"PLAYERMODELINFO")] = 1
+
+                copy_bytes(zobj, bytes(internal_name, "utf-8"), internal_name_location)
+                zobj[internal_name_location + len(internal_name)] = 0
+
+                copy_bytes(
+                    zobj,
+                    bytes(display_name, "utf-8"),
+                    display_name_location,
+                )
+                zobj[display_name_location + len(display_name)] = 0
+
+                copy_bytes(
+                    zobj,
+                    bytes(author, "utf-8"),
+                    author_name_location,
+                )
+                zobj[author_name_location + len(author)] = 0
+
+                dest = Path(out_dir, relative_zobj_path)
+                if dest.is_file():
+                    remove(dest)
+
+                makedirs(dest.parent)
+                dest.write_bytes(zobj)
+    except:
+        pass
+
+
+def handle_models(out_dir: Path, root: Path, model_info_list: list, author=""):
+    if len(author) > 63:
+        author = author[:63]
+
+    for model_info in model_info_list:
+        try:
+            handle_model(
+                model_info["file"],
+                model_info["name"],
+                out_dir,
+                root,
+                author,
+            )
+        except:
+            pass
+
+
+def process_ml64_model_package(output_dir: Path, input_dir: Path) -> None:
+    package_json_path = find_file_in_dir("package.json", input_dir)
+
+    if package_json_path is None:
+        print(f"Could not find package.json in {input_dir}")
+        return
+
+    package: Any = None
+    try:
+        package = json.loads(package_json_path.read_text())
+    except:
+        print(f"Found package.json was not a valid json file!")
+
+    author: str
+
+    try:
+        author = package["author"]
+    except:
+        author = ""
+
+    root = package_json_path.parent
+
+    try:
+        handle_model(
+            package["zzplayas"]["OcarinaOfTime"]["adult_model"],
+            package["name"],
+            output_dir,
+            root,
+            author,
+        )
+    except:
+        pass
+
+    try:
+        handle_model(
+            package["zzplayas"]["OcarinaOfTime"]["child_model"],
+            package["name"],
+            output_dir,
+            root,
+            author,
+        )
+    except:
+        pass
+
+    try:
+        handle_model(
+            package["zzplayas"]["MajorasMask"]["adult_model"],
+            package["name"],
+            output_dir,
+            root,
+            author,
+        )
+    except:
+        pass
+
+    try:
+        handle_model(
+            package["zzplayas"]["MajorasMask"]["child_model"],
+            package["name"],
+            output_dir,
+            root,
+            author,
+        )
+    except:
+        pass
+
+    try:
+        handle_models(
+            output_dir, root, package["zzplayas"]["OOT"]["adult_model"], author
+        )
+    except:
+        pass
+
+    try:
+        handle_models(
+            output_dir, root, package["zzplayas"]["OOT"]["child_model"], author
+        )
+    except:
+        pass
+
+    try:
+        handle_models(
+            output_dir, root, package["zzplayas"]["MM"]["adult_model"], author
+        )
+    except:
+        pass
+
+    try:
+        handle_models(
+            output_dir, root, package["zzplayas"]["MM"]["child_model"], author
+        )
+    except:
+        pass
+
+def process_pak(output_dir: Path, pak_path: Path) -> None:
+    extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", pak_path.stem)
+
+    makedirs(extracted_pkg)
+
+    Pak(str(pak_path)).extract_all(str(extracted_pkg))
+
+    process_ml64_model_package(output_dir, extracted_pkg)
+
+    rmtree(extracted_pkg)
+
+def process_paks_in_dir(output_dir: Path, input_dir: Path) -> None:
+    pak_files: list[Path] = []
+
+    for root, dirnames, filenames in walk(input_dir):
+        for filename in filenames:
+            p = Path("./", root, filename)
+
+            if p.suffix == ".pak":
+                pak_files.append(p)
+
+    for pak_file in pak_files:
+        process_pak(output_dir, pak_file)
+
+def process_zip(output_dir: Path, zip_path: Path) -> None:
+    extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", zip_path.stem)
+
+    makedirs(extracted_pkg)
+
+    try:
+        with zipfile.ZipFile(zip_path) as zip_file:
+            zip_file.extractall(extracted_pkg)
+            process_ml64_model_package(output_dir, extracted_pkg)
+            zip_file.close()
+    except:
+        pass
+
+    rmtree(extracted_pkg, True)
+
+def process_zips_in_dir(output_dir: Path, input_dir: Path):
+    zip_files: list[Path] = []
+
+    for root, dirnames, filenames in walk(input_dir):
+        for filename in filenames:
+            p = Path("./", root, filename)
+
+            if p.suffix == ".zip":
+                zip_files.append(p)
+
+    for zip_file in zip_files:
+        process_zip(output_dir, zip_file)
