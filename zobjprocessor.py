@@ -1,4 +1,3 @@
-import sys
 from os import makedirs, walk, remove
 from pathlib import Path
 from typing import Any
@@ -7,7 +6,7 @@ from shutil import rmtree
 import json
 import tempfile
 import zipfile
-import argparse
+
 
 def copy_bytes(dest: bytearray, src: bytes, dest_index: int, count: int | None = None):
     if count is None:
@@ -58,25 +57,30 @@ def handle_model(
                 if len(internal_name) > author_name_field_size - 1:
                     internal_name = internal_name[: author_name_field_size - 1]
 
+                internal_name = internal_name.replace("\\", "/")
+
                 copy_bytes(zobj, b"PLAYERMODELINFO", header_location)
                 zobj[header_location + len(b"PLAYERMODELINFO")] = 1
 
-                copy_bytes(zobj, bytes(internal_name, "utf-8"), internal_name_location)
-                zobj[internal_name_location + len(internal_name)] = 0
+                internal_name_buf = bytes(internal_name, "utf-8")
+                copy_bytes(zobj, internal_name_buf, internal_name_location)
+                zobj[internal_name_location + len(internal_name_buf)] = 0
 
+                display_name_buf = bytes(display_name, "utf-8")
                 copy_bytes(
                     zobj,
-                    bytes(display_name, "utf-8"),
+                    display_name_buf,
                     display_name_location,
                 )
-                zobj[display_name_location + len(display_name)] = 0
+                zobj[display_name_location + len(display_name_buf)] = 0
 
+                author_buf = bytes(author, "utf-8")
                 copy_bytes(
                     zobj,
-                    bytes(author, "utf-8"),
+                    author_buf,
                     author_name_location,
                 )
-                zobj[author_name_location + len(author)] = 0
+                zobj[author_name_location + len(author_buf)] = 0
 
                 dest = Path(out_dir, relative_zobj_path)
                 if dest.is_file():
@@ -199,6 +203,7 @@ def process_ml64_model_package(output_dir: Path, input_dir: Path) -> None:
     except:
         pass
 
+
 def process_pak(output_dir: Path, pak_path: Path) -> None:
     extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", pak_path.stem)
 
@@ -210,18 +215,20 @@ def process_pak(output_dir: Path, pak_path: Path) -> None:
 
     rmtree(extracted_pkg)
 
+
 def process_paks_in_dir(output_dir: Path, input_dir: Path) -> None:
     pak_files: list[Path] = []
 
     for root, dirnames, filenames in walk(input_dir):
         for filename in filenames:
-            p = Path("./", root, filename)
+            p = Path(root, filename)
 
             if p.suffix == ".pak":
                 pak_files.append(p)
 
     for pak_file in pak_files:
         process_pak(output_dir, pak_file)
+
 
 def process_zip(output_dir: Path, zip_path: Path) -> None:
     extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", zip_path.stem)
@@ -238,12 +245,13 @@ def process_zip(output_dir: Path, zip_path: Path) -> None:
 
     rmtree(extracted_pkg, True)
 
+
 def process_zips_in_dir(output_dir: Path, input_dir: Path):
     zip_files: list[Path] = []
 
     for root, dirnames, filenames in walk(input_dir):
         for filename in filenames:
-            p = Path("./", root, filename)
+            p = Path(root, filename)
 
             if p.suffix == ".zip":
                 zip_files.append(p)
