@@ -50,14 +50,12 @@ def handle_model(
                 author_name_location = display_name_location + display_name_field_size
 
                 relative_zobj_path = zobj_path.relative_to(root.parent)
-                internal_name = str(relative_zobj_path)
+                internal_name = str(relative_zobj_path).replace("\\", "/")
 
                 internal_name_buf = bytes(internal_name, "utf-8")
                 while len(internal_name_buf) > author_name_field_size - 1:
                     internal_name = internal_name[1:]
                     internal_name_buf = bytes(internal_name, "utf-8")
-
-                internal_name = internal_name.replace("\\", "/")
 
                 copy_bytes(zobj, b"PLAYERMODELINFO", header_location)
                 zobj[header_location + len(b"PLAYERMODELINFO")] = 1
