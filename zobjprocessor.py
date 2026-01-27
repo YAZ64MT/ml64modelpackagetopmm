@@ -197,6 +197,47 @@ def process_ml64_model_package(output_dir: Path, input_dir: Path) -> None:
     except:
         pass
 
+    tunics = [
+        ["kokiri", "(K. Tunic)"],
+        ["goron", "(G. Tunic)"],
+        ["zora", "(Z. Tunic)"],
+    ]
+
+    for tunic in tunics:
+        try:
+            handle_model(
+                package["zzplayas"]["OOT"]["tunic_models_adult"][tunic[0]],
+                package["name"] + f" {tunic[1]}",
+                output_dir,
+                root,
+                author,
+            )
+        except:
+            pass
+
+        try:
+            handle_model(
+                package["zzplayas"]["OOT"]["tunic_models_child"][tunic[0]],
+                package["name"] + f" {tunic[1]}",
+                output_dir,
+                root,
+                author,
+            )
+        except:
+            pass
+
+    for i in range(20, 101, 20):
+        try:
+            handle_model(
+                package["zzplayas"]["OOT"]["damage"][str(i)],
+                package["name"] + f" ({i})",
+                output_dir,
+                root,
+                author,
+            )
+        except:
+            pass
+
     try:
         handle_models(
             output_dir, root, package["zzplayas"]["MM"]["adult_model"], author
