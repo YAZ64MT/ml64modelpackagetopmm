@@ -77,7 +77,7 @@ def handle_model(
                     display_name_location,
                 )
 
-                if (len(display_name_buf) < internal_name_field_size):
+                if len(display_name_buf) < internal_name_field_size:
                     zobj[display_name_location + len(display_name_buf)] = 0
 
                 author_buf = bytes(author, "utf-8")
@@ -230,7 +230,7 @@ def process_ml64_model_package(output_dir: Path, input_dir: Path) -> None:
         try:
             handle_model(
                 package["zzplayas"]["OOT"]["damage"][str(i)],
-                package["name"] + f" ({i})",
+                package["name"] + f" ({i}%)",
                 output_dir,
                 root,
                 author,
