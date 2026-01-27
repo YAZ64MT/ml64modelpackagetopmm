@@ -1,4 +1,4 @@
-from os import makedirs, walk, remove
+from os import makedirs, walk
 from pathlib import Path
 from typing import Any
 from ml64pypak.pakformat import Pak
@@ -83,8 +83,6 @@ def handle_model(
                 zobj[author_name_location + len(author_buf)] = 0
 
                 dest = Path(out_dir, relative_zobj_path)
-                if dest.is_file():
-                    remove(dest)
 
                 makedirs(dest.parent)
                 dest.write_bytes(zobj)
