@@ -84,8 +84,8 @@ def handle_model(
 
                 dest = Path(out_dir, relative_zobj_path)
 
-                makedirs(dest.parent)
                 dest.write_bytes(zobj)
+                makedirs(dest.parent, exist_ok=True)
     except:
         pass
 
@@ -205,7 +205,7 @@ def process_ml64_model_package(output_dir: Path, input_dir: Path) -> None:
 def process_pak(output_dir: Path, pak_path: Path) -> None:
     extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", pak_path.stem)
 
-    makedirs(extracted_pkg)
+    makedirs(extracted_pkg, exist_ok=True)
 
     Pak(str(pak_path)).extract_all(str(extracted_pkg))
 
@@ -231,7 +231,7 @@ def process_paks_in_dir(output_dir: Path, input_dir: Path) -> None:
 def process_zip(output_dir: Path, zip_path: Path) -> None:
     extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", zip_path.stem)
 
-    makedirs(extracted_pkg)
+    makedirs(extracted_pkg, exist_ok=True)
 
     try:
         with zipfile.ZipFile(zip_path) as zip_file:
