@@ -51,28 +51,34 @@ def handle_model(
 
                 relative_zobj_path = zobj_path.relative_to(root.parent)
                 internal_name = str(relative_zobj_path)
-                if internal_name.endswith(".zobj"):
-                    internal_name = internal_name[:-5]
 
-                if len(internal_name) > author_name_field_size - 1:
-                    internal_name = internal_name[: author_name_field_size - 1]
+                internal_name_buf = bytes(internal_name, "utf-8")
+                while len(internal_name_buf) > author_name_field_size - 1:
+                    internal_name = internal_name[1:]
+                    internal_name_buf = bytes(internal_name, "utf-8")
 
                 internal_name = internal_name.replace("\\", "/")
 
                 copy_bytes(zobj, b"PLAYERMODELINFO", header_location)
                 zobj[header_location + len(b"PLAYERMODELINFO")] = 1
 
-                internal_name_buf = bytes(internal_name, "utf-8")
                 copy_bytes(zobj, internal_name_buf, internal_name_location)
                 zobj[internal_name_location + len(internal_name_buf)] = 0
 
                 display_name_buf = bytes(display_name, "utf-8")
+
+                while len(display_name_buf) > internal_name_field_size:
+                    display_name = display_name[:-1]
+                    display_name_buf = bytes(display_name, "utf-8")
+
                 copy_bytes(
                     zobj,
                     display_name_buf,
                     display_name_location,
                 )
-                zobj[display_name_location + len(display_name_buf)] = 0
+
+                if (len(display_name_buf) < internal_name_field_size):
+                    zobj[display_name_location + len(display_name_buf)] = 0
 
                 author_buf = bytes(author, "utf-8")
                 copy_bytes(
@@ -84,8 +90,12 @@ def handle_model(
 
                 dest = Path(out_dir, relative_zobj_path)
 
-                dest.write_bytes(zobj)
                 makedirs(dest.parent, exist_ok=True)
+
+                try:
+                    dest.write_bytes(zobj)
+                except:
+                    print(f"Failed to write to {str(dest)}")
     except:
         pass
 
