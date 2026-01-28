@@ -2,8 +2,7 @@ import sys
 import argparse
 from pathlib import Path
 from zipfile import is_zipfile
-from zobjprocessor import process_pak, process_zip
-
+from ml64modelpackagetopmm.zobjprocessor import process_pak, process_zip
 
 def is_pakfile(pak: Path) -> bool:
     try:

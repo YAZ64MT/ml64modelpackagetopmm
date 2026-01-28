@@ -1,7 +1,7 @@
 import sys
 import argparse
 from pathlib import Path
-from zobjprocessor import process_paks_in_dir, process_zips_in_dir
+from ml64modelpackagetopmm.zobjprocessor import process_paks_in_dir, process_zips_in_dir
 
 def process_zobjs_bulk(output: Path, input: Path) -> None:
     process_paks_in_dir(output, input)
