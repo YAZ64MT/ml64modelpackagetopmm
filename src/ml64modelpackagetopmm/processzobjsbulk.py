@@ -1,13 +1,14 @@
 import sys
 import argparse
 from pathlib import Path
+from typing import Sequence
 from ml64modelpackagetopmm.zobjprocessor import process_paks_in_dir, process_zips_in_dir
 
 def process_zobjs_bulk(output: Path, input: Path) -> None:
     process_paks_in_dir(output, input)
     process_zips_in_dir(output, input)
 
-def main(argv=sys.argv) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="Extracts zobjs from ML64 .pak and .zip mods and embeds metadata for PlayerModelManager."
     )

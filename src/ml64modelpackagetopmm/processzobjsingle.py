@@ -1,6 +1,7 @@
 import sys
 import argparse
 from pathlib import Path
+from typing import Sequence
 from zipfile import is_zipfile
 from ml64modelpackagetopmm.zobjprocessor import process_pak, process_zip
 
@@ -25,7 +26,7 @@ def process_zobjs_single(output: Path, input: Path) -> None:
         print(f"{input} is not a valid pak or zip!")
 
 
-def main(args=sys.argv) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="Extracts zobjs from ML64 .pak and .zip mods and embeds metadata for PlayerModelManager."
     )
@@ -33,7 +34,7 @@ def main(args=sys.argv) -> int:
     parser.add_argument(
         "-i", "--input", help="zip or pak file containing ML64 model.", type=Path
     )
-    args = parser.parse_args(args)
+    args = parser.parse_args(argv)
 
     process_zobjs_single(args.output, args.input)
 
