@@ -7,7 +7,7 @@ def process_zobjs_bulk(output: Path, input: Path) -> None:
     process_paks_in_dir(output, input)
     process_zips_in_dir(output, input)
 
-def main(args=sys.argv) -> int:
+def main(argv=sys.argv) -> int:
     parser = argparse.ArgumentParser(
         prog="Extracts zobjs from ML64 .pak and .zip mods and embeds metadata for PlayerModelManager."
     )
@@ -15,7 +15,7 @@ def main(args=sys.argv) -> int:
     parser.add_argument(
         "-i", "--input", help="Folder containing .pak files and .zip files.", type=Path
     )
-    args = parser.parse_args(args)
+    args = parser.parse_args(argv)
     process_zobjs_bulk(args.output, args.input)
     return 0
 

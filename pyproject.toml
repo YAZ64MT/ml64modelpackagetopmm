@@ -1,0 +1,20 @@
+[project]
+name = "ml64modelpackagetopmm"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Neirn",email = "neirny@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "ml64pypak @ git+https://github.com/Neirn/ml64pypak.git"
+]
+license = "GPL-3.0-or-later"
+
+[tool.poetry]
+packages = [{include = "ml64modelpackagetopmm", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
