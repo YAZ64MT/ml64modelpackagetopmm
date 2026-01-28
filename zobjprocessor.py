@@ -251,7 +251,10 @@ def process_ml64_model_package(output_dir: Path, input_dir: Path) -> None:
         pass
 
 
-def process_pak(output_dir: Path, pak_path: Path) -> None:
+def process_pak(output_dir: Path, pak_path: Path, create_output_dir=False) -> None:
+    if create_output_dir:
+        output_dir = Path(output_dir, pak_path.stem)
+
     extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", pak_path.stem)
 
     makedirs(extracted_pkg, exist_ok=True)
@@ -274,10 +277,13 @@ def process_paks_in_dir(output_dir: Path, input_dir: Path) -> None:
                 pak_files.append(p)
 
     for pak_file in pak_files:
-        process_pak(output_dir, pak_file)
+        process_pak(output_dir, pak_file, True)
 
 
-def process_zip(output_dir: Path, zip_path: Path) -> None:
+def process_zip(output_dir: Path, zip_path: Path, create_output_dir=False) -> None:
+    if create_output_dir:
+        output_dir = Path(output_dir, zip_path.stem)
+
     extracted_pkg = Path(tempfile.gettempdir(), "ml64playermodels", zip_path.stem)
 
     makedirs(extracted_pkg, exist_ok=True)
@@ -304,4 +310,4 @@ def process_zips_in_dir(output_dir: Path, input_dir: Path):
                 zip_files.append(p)
 
     for zip_file in zip_files:
-        process_zip(output_dir, zip_file)
+        process_zip(output_dir, zip_file, True)
